@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Steward | Archetype 001</title>
+    <style>
+        /* THE STEWARD AESTHETIC - MINIMALIST & DARK */
+        body { 
+            background-color: #0a0a0a; 
+            color: #d4d4d4; 
+            font-family: 'Courier New', Courier, monospace; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh;
+        }
+
+        .container { 
+            max-width: 600px; 
+            padding: 40px 20px; 
+            text-align: center; 
+        }
+
+        h1 { 
+            font-weight: 100; 
+            letter-spacing: 3px; 
+            text-transform: uppercase; 
+            font-size: 1.5rem; 
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .ticker {
+            color: #555;
+            font-size: 0.9rem;
+            margin-bottom: 40px;
+            display: block;
+        }
+
+        .essay-preview {
+            text-align: left;
+            border-left: 2px solid #333;
+            padding-left: 20px;
+            margin-bottom: 40px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #aaa;
+        }
+
+        .blur {
+            color: transparent;
+            text-shadow: 0 0 8px rgba(255,255,255,0.5);
+            user-select: none;
+        }
+
+        /* THE MINT CONTAINER */
+        .mint-frame {
+            border: 1px solid #333;
+            border-radius: 12px;
+            width: 100%;
+            height: 500px; /* Adjust based on Decent's output */
+            background: #111;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+
+        .footer {
+            margin-top: 60px;
+            font-size: 0.7rem;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>The Steward</h1>
+        <span class="ticker">ARCHETYPE #001 // $STWD</span>
+
+        <div class="essay-preview">
+            <p>The Steward does not seek attention. She manages what others inherit.</p>
+            <p>In a world of loud signals, she is the guardian of the quiet ledger.</p>
+            <p class="blur">
+                This text is encrypted. Only holders of the Key may read the full philosophy of the Office. 
+                Maintenance is not glamorous, but it is the only thing that lasts.
+            </p>
+        </div>
+
+        <div class="mint-frame">
+            <iframe
+                src="https://embed.ipfscdn.io/ipfs/bafybeigdie2yylzqlmn4lcafxh66wxqiltdhi2nppimxgcf57ho77s5w4e/erc1155.html?contract=0x5dCFeD9D2897d9EA587a30EcDA5a069461Ca46Dd&chain=%7B%22chainId%22%3A8453%2C%22rpc%22%3A%5B%22https%3A%2F%2F8453.rpc.thirdweb.com%2F%24%7BTHIRDWEB_API_KEY%7D%22%5D%7D&clientId=ed761c6efd5812770fcf82027369af31&tokenId=1&theme=dark&primaryColor=green"
+                width="100%" 
+                height="100%" 
+                frameborder="0">
+            </iframe>
+        </div>
+
+        <div class="footer">
+            <p>CONTRACT: 0x5dC...46dd</p>
+            <p>NETWORK: BASE</p>
+        </div>
+    </div>
+
+</body>
+</html>
