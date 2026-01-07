@@ -5,7 +5,7 @@
   <title>Mint — Based_d Babes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Ethers v6 (UMD, browser-safe) -->
+  <!-- Ethers v6 -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
 
   <style>
@@ -43,27 +43,27 @@
 
 <body>
 
-  <h1>Based_d Babes — The Archetypes</h1>
-  <p>Archetype #001: The Steward</p>
+<h1>Based_d Babes — The Archetypes</h1>
+<p>Archetype #001: The Steward</p>
 
-  <button id="connectBtn">Connect Wallet</button><br />
-  <button id="mintBtn" disabled>Mint (0.003 ETH)</button>
+<button id="connectBtn">Connect Wallet</button><br />
+<button id="mintBtn" disabled>Mint (0.003 ETH)</button>
 
-  <div id="status" class="status"></div>
+<div id="status" class="status"></div>
 
-<script type="module">
+<script>
 /* ============================================================
-   CANONICAL CONFIGURATION (FREEZE AFTER DEPLOY)
+   CANONICAL CONFIG (LOCKED)
    ============================================================ */
 
 const BASE_CHAIN_ID = 8453;
 
 const COLLECTION_ADDRESS = "0x5dCFeD9D2897d9EA587a30EcDA5a069461Ca46Dd";
-const ZORA_MINTER_ADDRESS = "0x04E2516A2c207E84a1839755675dfd8eF6302F0a";
+const ZORA_FIXED_PRICE_MINTER = "0x04E2516A2c207E84a1839755675dfd8eF6302F0a";
 
 const TOKEN_ID = 1;
-const PRICE_PER_TOKEN = 0.003;
-const MINT_QUANTITY = 1;
+const PRICE_PER_TOKEN = "0.003";
+const QUANTITY = 1;
 
 /* ============================================================
    STATE
@@ -81,16 +81,16 @@ const statusEl = document.getElementById("status");
 const connectBtn = document.getElementById("connectBtn");
 const mintBtn = document.getElementById("mintBtn");
 
-function setStatus(message, type = "") {
+function setStatus(msg, type = "") {
   statusEl.className = `status ${type}`;
-  statusEl.innerHTML = message;
+  statusEl.innerHTML = msg;
 }
 
 /* ============================================================
    NETWORK GUARD
    ============================================================ */
 
-async function ensureBaseNetwork() {
+async function ensureBase() {
   const network = await provider.getNetwork();
   if (Number(network.chainId) !== BASE_CHAIN_ID) {
     throw new Error("Please switch to Base mainnet.");
@@ -102,34 +102,31 @@ async function ensureBaseNetwork() {
    ============================================================ */
 
 connectBtn.onclick = async () => {
-  if (!window.ethereum) {
-    setStatus("No wallet detected.", "error");
-    return;
-  }
-
   try {
+    if (!window.ethereum) throw new Error("No wallet detected.");
+
     provider = new ethers.BrowserProvider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     signer = await provider.getSigner();
     walletAddress = await signer.getAddress();
 
-    await ensureBaseNetwork();
+    await ensureBase();
 
     connectBtn.textContent = "Wallet Connected";
     connectBtn.disabled = true;
     mintBtn.disabled = false;
 
     setStatus(
-      `Connected: ${walletAddress.slice(0, 6)}…${walletAddress.slice(-4)}`,
+      `Connected: ${walletAddress.slice(0,6)}…${walletAddress.slice(-4)}`,
       "success"
     );
   } catch (err) {
-    setStatus(err.message || "Wallet connection failed.", "error");
+    setStatus(err.message, "error");
   }
 };
 
 /* ============================================================
-   MINT LOGIC (ZORA SALE STRATEGY — CANONICAL)
+   ZORA FIXED PRICE SALE MINT
    ============================================================ */
 
 mintBtn.onclick = async () => {
@@ -137,35 +134,33 @@ mintBtn.onclick = async () => {
   mintBtn.textContent = "Minting…";
 
   try {
-    await ensureBaseNetwork();
+    await ensureBase();
 
     const zoraMinterAbi = [
-      "function mint(address to, uint256 quantity, address collection, uint256 tokenId, address mintReferral) payable"
+      "function mint(uint256 quantity, address collection, uint256 tokenId, address recipient, address mintReferral) payable"
     ];
 
-    const contract = new ethers.Contract(
-      ZORA_MINTER_ADDRESS,
+    const minter = new ethers.Contract(
+      ZORA_FIXED_PRICE_MINTER,
       zoraMinterAbi,
       signer
     );
 
-    const tx = await contract.mint(
-      walletAddress,
-      MINT_QUANTITY,
+    const tx = await minter.mint(
+      QUANTITY,
       COLLECTION_ADDRESS,
       TOKEN_ID,
+      walletAddress,
       ethers.ZeroAddress,
       {
-        value: ethers.parseEther(
-          (PRICE_PER_TOKEN * MINT_QUANTITY).toString()
-        )
+        value: ethers.parseEther(PRICE_PER_TOKEN)
       }
     );
 
     setStatus(
       `Transaction sent.<br>
        <a class="tx-link" href="https://basescan.org/tx/${tx.hash}" target="_blank">
-       View on BaseScan →
+         View on BaseScan →
        </a>`,
       "success"
     );
@@ -176,15 +171,7 @@ mintBtn.onclick = async () => {
 
   } catch (err) {
     console.error(err);
-
-    const message =
-      err?.info?.error?.message ||
-      err?.reason ||
-      err?.shortMessage ||
-      err?.message ||
-      "Mint failed.";
-
-    setStatus(message, "error");
+    setStatus(err.shortMessage || err.reason || err.message, "error");
   } finally {
     mintBtn.disabled = false;
     mintBtn.textContent = "Mint (0.003 ETH)";
