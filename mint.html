@@ -53,7 +53,7 @@
 
 <script type="module">
 /* ============================================================
-   CANONICAL CONFIGURATION (DO NOT MUTATE POST-DEPLOY)
+   CANONICAL CONFIGURATION (FREEZE AFTER DEPLOY)
    ============================================================ */
 
 const BASE_CHAIN_ID = 8453;
@@ -63,8 +63,7 @@ const ZORA_MINTER_ADDRESS = "0x04E2516A2c207E84a1839755675dfd8eF6302F0a";
 
 const TOKEN_ID = 1;
 const PRICE_PER_TOKEN = 0.003;
-const MAX_SUPPLY = 50;
-const MAX_PER_WALLET = 5;
+const MINT_QUANTITY = 1;
 
 /* ============================================================
    STATE
@@ -88,7 +87,7 @@ function setStatus(message, type = "") {
 }
 
 /* ============================================================
-   WALLET + NETWORK GUARDS
+   NETWORK GUARD
    ============================================================ */
 
 async function ensureBaseNetwork() {
@@ -97,6 +96,10 @@ async function ensureBaseNetwork() {
     throw new Error("Please switch to Base mainnet.");
   }
 }
+
+/* ============================================================
+   WALLET CONNECT
+   ============================================================ */
 
 connectBtn.onclick = async () => {
   if (!window.ethereum) {
@@ -116,25 +119,17 @@ connectBtn.onclick = async () => {
     connectBtn.disabled = true;
     mintBtn.disabled = false;
 
-    setStatus(`Connected: ${walletAddress.slice(0,6)}…${walletAddress.slice(-4)}`, "success");
+    setStatus(
+      `Connected: ${walletAddress.slice(0, 6)}…${walletAddress.slice(-4)}`,
+      "success"
+    );
   } catch (err) {
-    setStatus(err.message, "error");
+    setStatus(err.message || "Wallet connection failed.", "error");
   }
 };
 
 /* ============================================================
-   READ-ONLY SUPPLY CHECK (HARD GUARD)
-   ============================================================ */
-
-async function getTotalMinted() {
-  const abi = ["function totalSupply(uint256) view returns (uint256)"];
-  const contract = new ethers.Contract(COLLECTION_ADDRESS, abi, provider);
-  const supply = await contract.totalSupply(TOKEN_ID);
-  return Number(supply);
-}
-
-/* ============================================================
-   MINT LOGIC (ZORA SALE STRATEGY)
+   MINT LOGIC (ZORA SALE STRATEGY — CANONICAL)
    ============================================================ */
 
 mintBtn.onclick = async () => {
@@ -143,11 +138,6 @@ mintBtn.onclick = async () => {
 
   try {
     await ensureBaseNetwork();
-
-    const minted = await getTotalMinted();
-    if (minted >= MAX_SUPPLY) {
-      throw new Error("Sold out.");
-    }
 
     const zoraMinterAbi = [
       "function mint(address to, uint256 quantity, address collection, uint256 tokenId, address mintReferral) payable"
@@ -161,12 +151,14 @@ mintBtn.onclick = async () => {
 
     const tx = await contract.mint(
       walletAddress,
-      1,
+      MINT_QUANTITY,
       COLLECTION_ADDRESS,
       TOKEN_ID,
       ethers.ZeroAddress,
       {
-        value: ethers.parseEther(PRICE_PER_TOKEN.toString())
+        value: ethers.parseEther(
+          (PRICE_PER_TOKEN * MINT_QUANTITY).toString()
+        )
       }
     );
 
@@ -184,7 +176,15 @@ mintBtn.onclick = async () => {
 
   } catch (err) {
     console.error(err);
-    setStatus(err.reason || err.message || "Mint failed.", "error");
+
+    const message =
+      err?.info?.error?.message ||
+      err?.reason ||
+      err?.shortMessage ||
+      err?.message ||
+      "Mint failed.";
+
+    setStatus(message, "error");
   } finally {
     mintBtn.disabled = false;
     mintBtn.textContent = "Mint (0.003 ETH)";
